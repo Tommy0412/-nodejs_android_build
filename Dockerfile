@@ -49,8 +49,10 @@ ENV PAGE_SIZE=${PAGE_SIZE}
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
+    cmake \
     curl \
     git \
+    libicu-dev \
     libssl-dev \
     ninja-build \
     patch \
@@ -62,6 +64,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     wget \
     xz-utils \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Android NDK ────────────────────────────────────────────────────────────
