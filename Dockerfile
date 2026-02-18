@@ -174,9 +174,12 @@ RUN cd /build/node-src && \
         cd /build && \
         wget -q "${ICU_URL}" -O icu-src.tgz && \
         tar -xzf icu-src.tgz && \
-        ICU_DIR=$(ls -d icu-release-* 2>/dev/null | head -1) && \
+        ls -la && \
+        ICU_DIR=$(ls -d *icu* 2>/dev/null | grep -v node-src | head -1) && \
+        echo "Found ICU dir: ${ICU_DIR}" && \
+        ls -la "${ICU_DIR}" && \
         mv "${ICU_DIR}/icu4c" "node-src/deps/icu-full" && \
-        rm -rf icu-release-* icu-src.tgz; \
+        rm -rf *icu* icu-src.tgz; \
     fi && \
     echo "ICU source: $(ls deps/icu-small 2>/dev/null || ls deps/icu-full 2>/dev/null || echo '(embedded)')"
 
