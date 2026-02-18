@@ -170,7 +170,7 @@ RUN cd /build/node-src && \
     if [ ! -f deps/icu-small/icu4c/source/runConfigureICU ]; then \
         echo "Downloading full ICU..." && \
         ICU_VERSION="75.1" && \
-        ICU_URL="https://github.com/unicode-org/icu/releases/download/release-75-1/icu4c-75-1-src.tgz" && \
+        ICU_URL="https://github.com/unicode-org/icu/releases/download/release-75-1/icu4c-75_1-src.tgz" && \
         cd /build && \
         wget -q "${ICU_URL}" -O icu-src.tgz && \
         tar -xzf icu-src.tgz && \
