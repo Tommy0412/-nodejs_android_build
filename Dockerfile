@@ -122,14 +122,7 @@ RUN echo "Fetching Termux patches from ${TERMUX_REF}..." && \
     for PKG in nodejs-lts nodejs; do \
         API_URL="https://api.github.com/repos/termux/termux-packages/contents/packages/${PKG}?ref=${TERMUX_REF}"; \
         curl -sfL "${API_URL}" 2>/dev/null \
-            | python3 -c "
-import sys, json
-try:
-    items = json.load(sys.stdin)
-    patches = [i['download_url'] for i in items if i['name'].endswith('.patch')]
-    print('\n'.join(patches))
-except: pass
-" \
+            | python3 -c "import sys, json; items = json.load(sys.stdin); patches = [i['download_url'] for i in items if i['name'].endswith('.patch')]; print('\n'.join(patches))" \
             | while read URL; do \
                 FNAME=$(basename "$URL"); \
                 echo "  [API] Downloading ${PKG}/${FNAME}"; \
