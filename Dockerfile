@@ -166,8 +166,8 @@ RUN cd /build/node-src && \
 # Node bundles ICU source in deps/icu-small. We build it for the host.
 RUN cd /build/node-src && \
     echo "Preparing host ICU..." && \
-    # Run the ICU download helper if icu-small not present
-    [ ! -d deps/icu-small ] && python3 tools/icu/icudownload.py || true && \
+    # Run the ICU download helper if runConfigureICU not found (icu-small may be incomplete)
+    [ ! -f deps/icu-small/icu4c/source/runConfigureICU ] && python3 tools/icu/icudownload.py || true && \
     echo "ICU source: $(ls deps/icu-small 2>/dev/null || ls deps/icu 2>/dev/null || echo '(embedded)')"
 
 RUN mkdir -p /build/icu-host-build /build/icu-host && \
