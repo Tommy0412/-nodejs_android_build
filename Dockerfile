@@ -163,15 +163,25 @@ RUN cd /build/node-src && \
 # mksnapshot and torque run on the HOST during cross-compilation.
 # They need host ICU to function. We build a static host ICU here.
 #
-# Node bundles ICU source in deps/icu-small. We build it for the host.
+# Node bundles ICU source in deps/icu-small. We download full ICU if needed.
 RUN cd /build/node-src && \
     echo "Preparing host ICU..." && \
-    # Run the ICU download helper if runConfigureICU not found (icu-small may be incomplete)
-    [ ! -f deps/icu-small/icu4c/source/runConfigureICU ] && python3 tools/icu/icudownload.py || true && \
-    echo "ICU source: $(ls deps/icu-small 2>/dev/null || ls deps/icu 2>/dev/null || echo '(embedded)')"
+    # Check if we have a complete ICU (runConfigureICU exists), if not download full ICU
+    if [ ! -f deps/icu-small/icu4c/source/runConfigureICU ]; then \
+        echo "Downloading full ICU..." && \
+        ICU_VERSION="75.1" && \
+        ICU_URL="https://github.com/unicode-org/icu/releases/download/release-75-1/icu4c-75-1-src.tgz" && \
+        cd /build && \
+        wget -q "${ICU_URL}" -O icu-src.tgz && \
+        tar -xzf icu-src.tgz && \
+        mv "icu/icu4c" "node-src/deps/icu-full" && \
+        rm -rf icu icu-src.tgz; \
+    fi && \
+    echo "ICU source: $(ls deps/icu-small 2>/dev/null || ls deps/icu-full 2>/dev/null || echo '(embedded)')"
 
 RUN mkdir -p /build/icu-host-build /build/icu-host && \
-    ICU_SRC_DIR=$(ls -d /build/node-src/deps/icu-small 2>/dev/null || \
+    ICU_SRC_DIR=$(ls -d /build/node-src/deps/icu-full 2>/dev/null || \
+                  ls -d /build/node-src/deps/icu-small 2>/dev/null || \
                   ls -d /build/node-src/deps/icu 2>/dev/null) && \
     echo "Building host ICU from ${ICU_SRC_DIR}..." && \
     cd /build/icu-host-build && \
