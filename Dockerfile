@@ -178,8 +178,10 @@ RUN cd /build/node-src && \
         wget -q "${ICU_URL}" -O icu-src.tgz && \
         tar -xzf icu-src.tgz && \
         # The downloaded ICU has source directly in icu/ folder, create proper structure
-        mkdir -p "icu/icu4c" && \
-        mv icu/source "icu/icu4c/" && \
+        mkdir -p "icu/icu4c/source" && \
+        mv icu/source/* "icu/icu4c/source/" && \
+        # Copy other required files to icu4c root
+        cp -r icu/* "icu/icu4c/" 2>/dev/null || true && \
         mv icu icu-full-temp && \
         mkdir -p "node-src/deps" && \
         mv icu-full-temp "node-src/deps/icu-full" && \
