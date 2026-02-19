@@ -281,12 +281,15 @@ RUN cd /build/node-src && \
 
 # ── Build ──────────────────────────────────────────────────────────────────
 RUN cd /build/node-src && \
+    export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
     echo "Building Node.js (this will take a while)..." && \
     make -j${JOBS} 2>&1 | tee /build/build.log && \
     echo "Build complete!"
 
 # ── Install & collect artifacts ────────────────────────────────────────────
-RUN cd /build/node-src && make install
+RUN cd /build/node-src && \
+    export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
+    make install
 
 RUN mkdir -p /artifacts/lib /artifacts/include && \
     \
