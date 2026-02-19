@@ -282,6 +282,8 @@ RUN cd /build/node-src && \
 # ── Build ──────────────────────────────────────────────────────────────────
 RUN cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
+    export CFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
+    export CXXFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
     echo "Building Node.js (this will take a while)..." && \
     make -j${JOBS} 2>&1 | tee /build/build.log && \
     echo "Build complete!"
@@ -289,6 +291,8 @@ RUN cd /build/node-src && \
 # ── Install & collect artifacts ────────────────────────────────────────────
 RUN cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
+    export CFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
+    export CXXFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
     make install
 
 RUN mkdir -p /artifacts/lib /artifacts/include && \
