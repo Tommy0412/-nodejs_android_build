@@ -222,7 +222,7 @@ RUN mkdir -p /build/icu-host-build /build/icu-host && \
 #                           shared libs loaded via dlopen(), so libuv must
 #                           be statically linked. See termux/termux-packages#462
 RUN cd /build/node-src && \
-    export GYP_DEFINES="target_arch=arm64 host_arch=x64 android_ndk_path=${NDK_HOME}" && \
+    export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
     \
     # ── 16KB page alignment flags ──────────────────────────────────────────
     # -Wl,-z,max-page-size=N   → sets the max ELF load segment alignment.
