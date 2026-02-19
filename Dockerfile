@@ -260,15 +260,8 @@ RUN cd /build/node-src && \
 RUN cd /build/node-src && \
     HOST_ICU_LDFLAGS="-L/build/icu-host/lib -lpthread -licui18n -licuuc -licudata -ldl -lz" && \
     \
-    HOST_MKS=( \
-        "out/tools/v8_gypfiles/mksnapshot.host.mk" \
-        "out/tools/v8_gypfiles/torque.host.mk" \
-        "out/tools/v8_gypfiles/bytecode_builtins_list_generator.host.mk" \
-        "out/tools/v8_gypfiles/v8_libbase.host.mk" \
-        "out/tools/v8_gypfiles/gen-regexp-special-case.host.mk" \
-    ) && \
-    \
-    for mk in "${HOST_MKS[@]}"; do \
+    HOST_MKS="out/tools/v8_gypfiles/mksnapshot.host.mk:out/tools/v8_gypfiles/torque.host.mk:out/tools/v8_gypfiles/bytecode_builtins_list_generator.host.mk:out/tools/v8_gypfiles/v8_libbase.host.mk:out/tools/v8_gypfiles/gen-regexp-special-case.host.mk" && \
+    echo "$HOST_MKS" | tr ':' '\n' | while read mk; do \
         if [ -f "$mk" ]; then \
             echo "Patching $mk for host ICU..." && \
             perl -p -i -e \
