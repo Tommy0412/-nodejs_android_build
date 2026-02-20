@@ -217,10 +217,10 @@ RUN mkdir -p /build/icu-host-build /build/icu-host && \
 #   --without-npm           Skip npm (not needed for embedded use)
 #   --without-inspector     Skip Chrome DevTools protocol (saves ~2MB)
 #   --openssl-no-asm        NDK clang lacks some openssl ASM optimizations
-#   --with-bundled-libuv    Static libuv — CRITICAL for Android:
-#                           Android's linker won't resolve symbols from
-#                           shared libs loaded via dlopen(), so libuv must
-#                           be statically linked. See termux/termux-packages#462
+#   --extra-cflags          Applied by Node to both CFLAGS and CXXFLAGS:
+#                           adds NDK cpufeatures include path (needed by
+#                           zlib's ARM NEON acceleration) and silences the
+#                           -Wno-old-style-declaration clang warning
 RUN set -o pipefail && \
     cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
@@ -247,11 +247,9 @@ RUN set -o pipefail && \
         --without-npm \
         --without-inspector \
         --openssl-no-asm \
-        --with-bundled-libuv \
         --prefix=/output \
         --extra-ldflags="${PAGE_LDFLAGS}" \
         --extra-cflags="-isystem ${NDK_HOME}/sources/android/cpufeatures -Wno-unknown-warning-option" \
-        --extra-cxxflags="-isystem ${NDK_HOME}/sources/android/cpufeatures -Wno-unknown-warning-option" \
         2>&1 | tee /build/configure.log && \
     echo "Configure done" && \
     echo "Page size flags: ${PAGE_LDFLAGS}"
