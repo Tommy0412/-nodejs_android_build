@@ -249,6 +249,8 @@ RUN cd /build/node-src && \
         --with-bundled-libuv \
         --prefix=/output \
         --extra-ldflags="${PAGE_LDFLAGS}" \
+        --extra-cflags="-isystem ${NDK_HOME}/sources/android/cpufeatures -Wno-unknown-warning-option" \
+        --extra-cxxflags="-isystem ${NDK_HOME}/sources/android/cpufeatures -Wno-unknown-warning-option" \
         2>&1 | tee /build/configure.log && \
     echo "Configure done" && \
     echo "Page size flags: ${PAGE_LDFLAGS}"
@@ -282,18 +284,12 @@ RUN cd /build/node-src && \
 # ── Build ──────────────────────────────────────────────────────────────────
 RUN cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
-    export CFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
-    export CXXFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
     echo "Building Node.js (this will take a while)..." && \
     make -j${JOBS} 2>&1 | tee /build/build.log && \
     echo "Build complete!"
 
 # ── Install & collect artifacts ────────────────────────────────────────────
-RUN cd /build/node-src && \
-    export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
-    export CFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
-    export CXXFLAGS="--sysroot=${TOOLCHAIN}/sysroot -isystem ${TOOLCHAIN}/sysroot/usr/include/aarch64-linux-android" && \
-    make install
+RUN cd /build/node-src && make install
 
 RUN mkdir -p /artifacts/lib /artifacts/include && \
     \
