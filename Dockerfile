@@ -221,7 +221,8 @@ RUN mkdir -p /build/icu-host-build /build/icu-host && \
 #                           Android's linker won't resolve symbols from
 #                           shared libs loaded via dlopen(), so libuv must
 #                           be statically linked. See termux/termux-packages#462
-RUN cd /build/node-src && \
+RUN set -o pipefail && \
+    cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
     \
     # ── 16KB page alignment flags ──────────────────────────────────────────
@@ -281,15 +282,23 @@ RUN cd /build/node-src && \
         done; \
     done || true
 
-# ── Build ──────────────────────────────────────────────────────────────────
-RUN cd /build/node-src && \
+# ── Build + Install ────────────────────────────────────────────────────────
+# IMPORTANT: build and install are in the same RUN step intentionally.
+# If split across two RUN steps, `make install` re-evaluates prerequisites
+# and can trigger a partial recompile with a different environment, which
+# causes hard-to-debug failures.
+#
+# IMPORTANT: use `set -o pipefail` before any `cmd | tee` so that make
+# failures are not swallowed by tee's exit code. Without pipefail, a failed
+# `make | tee build.log` exits 0 (tee's exit code), Docker commits the layer
+# as success, and the real error only surfaces in the next step.
+RUN set -o pipefail && \
+    cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
     echo "Building Node.js (this will take a while)..." && \
     make -j${JOBS} 2>&1 | tee /build/build.log && \
-    echo "Build complete!"
-
-# ── Install & collect artifacts ────────────────────────────────────────────
-RUN cd /build/node-src && make install
+    echo "Build complete!" && \
+    make install
 
 RUN mkdir -p /artifacts/lib /artifacts/include && \
     \
