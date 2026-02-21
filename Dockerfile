@@ -22,6 +22,11 @@
 
 FROM ubuntu:22.04 AS builder
 
+# Use bash with pipefail for all RUN steps.
+# Default Docker shell is /bin/sh which does not support pipefail,
+# causing `cmd | tee` to swallow non-zero exit codes from cmd.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # ── Build arguments ────────────────────────────────────────────────────────
 ARG NODE_VERSION=24.13.0
 ARG NDK_VERSION=r27c
@@ -221,8 +226,7 @@ RUN mkdir -p /build/icu-host-build /build/icu-host && \
 #                           adds NDK cpufeatures include path (needed by
 #                           zlib's ARM NEON acceleration) and silences the
 #                           -Wno-old-style-declaration clang warning
-RUN set -o pipefail && \
-    cd /build/node-src && \
+RUN cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
     \
     # ── 16KB page alignment flags ──────────────────────────────────────────
@@ -281,17 +285,11 @@ RUN cd /build/node-src && \
     done || true
 
 # ── Build + Install ────────────────────────────────────────────────────────
-# IMPORTANT: build and install are in the same RUN step intentionally.
-# If split across two RUN steps, `make install` re-evaluates prerequisites
-# and can trigger a partial recompile with a different environment, which
-# causes hard-to-debug failures.
-#
-# IMPORTANT: use `set -o pipefail` before any `cmd | tee` so that make
-# failures are not swallowed by tee's exit code. Without pipefail, a failed
-# `make | tee build.log` exits 0 (tee's exit code), Docker commits the layer
-# as success, and the real error only surfaces in the next step.
-RUN set -o pipefail && \
-    cd /build/node-src && \
+# build and install are in the same RUN step so make install doesn't
+# re-evaluate prerequisites in a different environment.
+# pipefail is set globally via the SHELL directive at the top of this file,
+# so make failures are not swallowed by `tee`'s exit code.
+RUN cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
     echo "Building Node.js (this will take a while)..." && \
     make -j${JOBS} 2>&1 | tee /build/build.log && \
