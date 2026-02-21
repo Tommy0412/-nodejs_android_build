@@ -249,7 +249,6 @@ RUN cd /build/node-src && \
         --without-inspector \
         --openssl-no-asm \
         --prefix=/output \
-        --extra-ldflags="${PAGE_LDFLAGS}" \
         2>&1 | tee /build/configure.log && \
     echo "Configure done" && \
     echo "Page size flags: ${PAGE_LDFLAGS}"
