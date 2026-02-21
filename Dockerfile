@@ -56,6 +56,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     cmake \
     curl \
+    g++-12 \
     git \
     libicu-dev \
     libssl-dev \
@@ -70,7 +71,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     xz-utils \
     zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 12
 
 # ── Android NDK ────────────────────────────────────────────────────────────
 WORKDIR /opt
