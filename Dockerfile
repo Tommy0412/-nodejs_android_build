@@ -214,6 +214,14 @@ RUN mkdir -p /build/icu-host-build /build/icu-host && \
     && make install \
     && echo "Host ICU installed to /build/icu-host"
 
+# ── Copy NDK cpu-features header into sysroot ─────────────────────────────
+# Node's bundled zlib includes cpu_features.c for ARM NEON/CRC32 acceleration.
+# It includes <cpu-features.h> which lives in the NDK at
+# sources/android/cpufeatures/ but is not in the default sysroot include path.
+# Copying it there is simpler and more reliable than patching include paths.
+RUN cp "${NDK_HOME}/sources/android/cpufeatures/cpu-features.h" \
+       "${TOOLCHAIN}/sysroot/usr/include/cpu-features.h"
+
 # ── Configure Node.js for Android ARM64 ───────────────────────────────────
 #
 # Key flags explained:
@@ -225,23 +233,9 @@ RUN mkdir -p /build/icu-host-build /build/icu-host && \
 #   --without-npm           Skip npm (not needed for embedded use)
 #   --without-inspector     Skip Chrome DevTools protocol (saves ~2MB)
 #   --openssl-no-asm        NDK clang lacks some openssl ASM optimizations
-#   --extra-cflags          Applied by Node to both CFLAGS and CXXFLAGS:
-#                           adds NDK cpufeatures include path (needed by
-#                           zlib's ARM NEON acceleration) and silences the
-#                           -Wno-old-style-declaration clang warning
 RUN cd /build/node-src && \
     export GYP_DEFINES="target_arch=arm64 host_arch=x64 host_os=linux android_ndk_path=${NDK_HOME}" && \
     \
-    # ── 16KB page alignment flags ──────────────────────────────────────────
-    # -Wl,-z,max-page-size=N   → sets the max ELF load segment alignment.
-    #                            Must be 16384 for Android 15+ 16KB-page devices.
-    #                            A 16KB-aligned .so is fully backward-compatible
-    #                            with 4KB-page devices, so this is safe for all
-    #                            Android versions (API 24+).
-    # -Wl,-z,common-page-size=N → tells the linker what page size to assume
-    #                             for internal layout (RW data alignment, etc.)
-    # Passed via both LDFLAGS (picked up by most of the build system) AND
-    # --extra-ldflags (injected by GYP into every explicit link step).
     PAGE_LDFLAGS="-Wl,-z,max-page-size=${PAGE_SIZE} -Wl,-z,common-page-size=${PAGE_SIZE}" && \
     export LDFLAGS="${PAGE_LDFLAGS}" && \
     \
@@ -256,7 +250,6 @@ RUN cd /build/node-src && \
         --openssl-no-asm \
         --prefix=/output \
         --extra-ldflags="${PAGE_LDFLAGS}" \
-        --extra-cflags="-isystem ${NDK_HOME}/sources/android/cpufeatures -Wno-unknown-warning-option" \
         2>&1 | tee /build/configure.log && \
     echo "Configure done" && \
     echo "Page size flags: ${PAGE_LDFLAGS}"
